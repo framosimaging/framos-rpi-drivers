@@ -9,6 +9,7 @@ This repository contains driver-source installation instructions for FRAMOS Gene
 > - [Install an operating system](https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system)
 > - [The Linux kernel](https://www.raspberrypi.com/documentation/computers/linux_kernel.html)
 > - [Camera software](https://www.raspberrypi.com/documentation/computers/camera_software.html)
+
 #
 ## Supported Raspberry Pi models
 
