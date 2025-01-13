@@ -34,7 +34,7 @@ Click "Download" to automatically start downloading Raspberry Pi OS Image.
 
 ## 1. Install Raspberry Pi OS
 
-- [Raspberry Pi OS installation guide](https://github.com/Bajec/rpi-drivers/wiki/Install-Raspberry-Pi-OS-(64%E2%80%90bit))
+- [Raspberry Pi OS installation guide](https://github.com/framosimaging/framos-rpi-drivers/wiki/Install-Raspberry-Pi-OS-(64%E2%80%90bit))
 
 ## 2. Get & Install Framos drivers
 
