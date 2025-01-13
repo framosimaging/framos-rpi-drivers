@@ -34,16 +34,16 @@ Click "Download" to automatically start downloading Raspberry Pi OS Image.
 
 ## 1. Install Raspberry Pi OS
 
-- [Raspberry Pi OS installation guide](https://github.com/framosimaging/framos-rpi-drivers/wiki/Install%E2%80%90Raspberry%E2%80%90Pi%E2%80%90OS%E2%80%90(64%E2%80%90bit))
+- [Raspberry Pi OS installation guide](https://github.com/Bajec/rpi-drivers/wiki/Install-Raspberry-Pi-OS-(64%E2%80%90bit))
 
 ## 2. Get & Install Framos drivers
 
 Two methods:
-- [Compile Framos source code on target system(Raspberry Pi)](https://github.com/framosimaging/framos-rpi-drivers/wiki/FRAMOS%E2%80%90Sensor%E2%80%90Module%E2%80%90drivers-%E2%80%90-Target%E2%80%90build)
+- [Compile Framos source code on target system(Raspberry Pi)](https://github.com/framosimaging/framos-rpi-drivers/wiki/FRAMOS-Sensor-Module-drivers-%E2%80%90-Target%E2%80%90build)
 
 or
 
-- [Cross-compile Framos source code on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-rpi-drivers/wiki/FRAMOS%E2%80%90Sensor%E2%80%90Module%E2%80%90drivers-%E2%80%90-Cross%E2%80%90compile)
+- [Cross-compile Framos source code on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-rpi-drivers/wiki/FRAMOS-Sensor-Module-drivers-%E2%80%90-Cross%E2%80%90compile)
 
 ## 3. Get & Install Framos-libcamera
 
