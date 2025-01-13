@@ -26,23 +26,23 @@ Click "Download" to automatically start downloading Raspberry Pi OS Image.
 
 |Raspberry Pi OS|Linux source tag|framos-rpi-drivers branch|Release notes|
 |-|-|-|-|
-|[Raspberry Pi OS (64-bit) 2024-11-19](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/) [[Download]](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64.img.xz)|stable_20241008|framos_20241008|[framos_20241008]()|
+|[Raspberry Pi OS (64-bit) 2024-11-19](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/) [[Download]](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64.img.xz)|stable_20241008|framos_20241008|[framos_20241008](https://github.com/framosimaging/framos-rpi-drivers/wiki/Release%E2%80%90Notes%E2%80%90framos_20241008)|
 
 
 # Short procedure
 
 ## 1. Install Raspberry Pi OS
 
-- [Raspberry Pi OS installation guide]()
+- [Raspberry Pi OS installation guide](https://github.com/framosimaging/framos-rpi-drivers/wiki/Install%E2%80%90Raspberry%E2%80%90Pi%E2%80%90OS%E2%80%90(64%E2%80%90bit))
 
 ## 2. Get & Install Framos drivers
 
 Two methods:
-- [Compile Framos source code on target system(Raspberry Pi)]()
+- [Compile Framos source code on target system(Raspberry Pi)](https://github.com/framosimaging/framos-rpi-drivers/wiki/FRAMOS%E2%80%90Sensor%E2%80%90Module%E2%80%90drivers-%E2%80%90-Target%E2%80%90build)
 
 or
 
-- [Cross-compile Framos source code on host system(Ubuntu 22.04)]()
+- [Cross-compile Framos source code on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-rpi-drivers/wiki/FRAMOS%E2%80%90Sensor%E2%80%90Module%E2%80%90drivers-%E2%80%90-Cross%E2%80%90compile)
 
 ## 3. Get & Install Framos-libcamera
 
