@@ -46,4 +46,4 @@ or
 
 ## 3. Get & Install Framos-libcamera
 
-- [Proceed to framos-libcamera rpository]()
+- [Proceed to framos-libcamera rpository](https://github.com/framosimaging/framos-libcamera)
