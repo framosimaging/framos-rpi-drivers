@@ -7,7 +7,7 @@
 
 //#define DEBUG 1
 
-#include <asm/unaligned.h>
+#include <linux/unaligned.h>
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
 #include <linux/i2c.h>
@@ -490,9 +490,9 @@ static int imx662_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	struct imx662 *imx662 = to_imx662(sd);
 	struct v4l2_mbus_framefmt *try_fmt_img =
-		v4l2_subdev_get_try_format(sd, fh->state, IMAGE_PAD);
+		v4l2_subdev_state_get_format(fh->state, IMAGE_PAD);
 	struct v4l2_mbus_framefmt *try_fmt_meta =
-		v4l2_subdev_get_try_format(sd, fh->state, METADATA_PAD);
+		v4l2_subdev_state_get_format(fh->state, METADATA_PAD);
 	struct v4l2_rect *try_crop;
 
 	mutex_lock(&imx662->mutex);
@@ -508,7 +508,7 @@ static int imx662_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	try_fmt_meta->code = MEDIA_BUS_FMT_SENSOR_DATA;
 	try_fmt_meta->field = V4L2_FIELD_NONE;
 
-	try_crop = v4l2_subdev_get_try_crop(sd, fh->state, IMAGE_PAD);
+	try_crop = v4l2_subdev_state_get_crop(fh->state, IMAGE_PAD);
 	try_crop->left = IMX662_PIXEL_ARRAY_LEFT;
 	try_crop->top = IMX662_PIXEL_ARRAY_TOP;
 	try_crop->width = IMX662_PIXEL_ARRAY_WIDTH;
@@ -950,7 +950,7 @@ static int imx662_get_pad_format(struct v4l2_subdev *sd,
 
 	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
 		struct v4l2_mbus_framefmt *try_fmt =
-			v4l2_subdev_get_try_format(&imx662->sd, sd_state,
+			v4l2_subdev_state_get_format(sd_state,
 							fmt->pad);
 		try_fmt->code = fmt->pad == IMAGE_PAD ?
 				imx662_get_format_code(imx662, try_fmt->code) :
@@ -1050,7 +1050,7 @@ static int imx662_set_pad_format(struct v4l2_subdev *sd,
 		imx662_update_image_pad_format(imx662, mode, fmt);
 
 		if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
-			framefmt = v4l2_subdev_get_try_format(sd, sd_state,
+			framefmt = v4l2_subdev_state_get_format(sd_state,
 								fmt->pad);
 			*framefmt = fmt->format;
 		} else if (imx662->mode != mode) {
@@ -1060,7 +1060,7 @@ static int imx662_set_pad_format(struct v4l2_subdev *sd,
 		}
 	} else {
 		if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
-			framefmt = v4l2_subdev_get_try_format(sd, sd_state,
+			framefmt = v4l2_subdev_state_get_format(sd_state,
 								fmt->pad);
 			*framefmt = fmt->format;
 		} else {
@@ -1080,7 +1080,7 @@ __imx662_get_pad_crop(struct imx662 *imx662,
 {
 	switch (which) {
 	case V4L2_SUBDEV_FORMAT_TRY:
-		return v4l2_subdev_get_try_crop(&imx662->sd, sd_state, pad);
+		return v4l2_subdev_state_get_crop(sd_state, pad);
 	case V4L2_SUBDEV_FORMAT_ACTIVE:
 		return &imx662->mode->crop;
 	}
