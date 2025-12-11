@@ -25,9 +25,9 @@ If using target build, the "framos-rpi-drivers branch" is used to checkout to co
 
 Click "Download" to automatically start downloading Raspberry Pi OS Image.
 
-|Raspberry Pi OS|Linux source tag|framos-rpi-drivers branch|Release notes|
-|-|-|-|-|
-|[Raspberry Pi OS (64-bit) 2024-11-19](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/) [[Download]](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64.img.xz)|stable_20241008|framos_20241008|[framos_20241008](https://github.com/framosimaging/framos-rpi-drivers/wiki/Release%E2%80%90Notes%E2%80%90framos_20241008)|
+|Raspberry Pi OS|Linux kernel|Linux source tag|framos-rpi-drivers branch|Release notes|
+|-|-|-|-|-|
+|[Raspberry Pi OS (64-bit) 2024-11-19](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/) [[Download]](https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64.img.xz)|6.6.51|stable_20241008|framos_20241008|[framos_20241008](https://github.com/framosimaging/framos-rpi-drivers/wiki/Release%E2%80%90Notes%E2%80%90framos_20241008)|
 
 
 # Short procedure
