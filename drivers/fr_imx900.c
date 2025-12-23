@@ -47,6 +47,7 @@
 #define IMX900_ANA_GAIN_DEFAULT			0
 
 #define IMX900_BLACK_LEVEL_MIN			0
+#define IMX900_CONVERSION_ANA_GAIN_MIN		30
 #define IMX900_BLACK_LEVEL_STEP			1
 #define IMX900_MAX_BLACK_LEVEL_8BPP		255
 #define IMX900_MAX_BLACK_LEVEL_10BPP		1023
@@ -54,6 +55,7 @@
 #define IMX900_DEFAULT_BLACK_LEVEL_8BPP		15
 #define IMX900_DEFAULT_BLACK_LEVEL_10BPP	60
 #define IMX900_DEFAULT_BLACK_LEVEL_12BPP	240
+#define IMX900_CONVERSION_ANA_GAIN_DEFAULT	30
 
 #define IMX900_EMBEDDED_LINE_WIDTH		16384
 #define IMX900_NUM_EMBEDDED_LINES		1
@@ -74,6 +76,7 @@ enum pad_types {
 #define V4L2_CID_FRAME_RATE		(V4L2_CID_USER_IMX_BASE + 1)
 #define V4L2_CID_OPERATION_MODE		(V4L2_CID_USER_IMX_BASE + 2)
 #define V4L2_CID_GLOBAL_SHUTTER_MODE	(V4L2_CID_USER_IMX_BASE + 3)
+#define V4L2_CID_CONVERSION_GAIN	(V4L2_CID_USER_IMX_BASE + 4)
 
 struct imx900_reg_list {
 
@@ -461,6 +464,7 @@ struct imx900 {
 	struct v4l2_ctrl *pixel_rate;
 	struct v4l2_ctrl *link_freq;
 	struct v4l2_ctrl *exposure;
+	struct v4l2_ctrl *gain;
 	struct v4l2_ctrl *framerate;
 	struct v4l2_ctrl *operation_mode;
 	struct v4l2_ctrl *shutter_mode;
@@ -469,6 +473,7 @@ struct imx900 {
 	struct v4l2_ctrl *vblank;
 	struct v4l2_ctrl *hblank;
 	struct v4l2_ctrl *blklvl;
+	struct v4l2_ctrl *conversion_gain;
 
 	u8 chromacity;
 	u8 linkfreq;
@@ -566,6 +571,13 @@ static const char * const imx900_global_shutter_menu[] = {
 	[NORMAL_MODE] = "Normal Mode",
 	[SEQUENTIAL_TRIGGER_MODE] = "Sequential Trigger Mode",
 	[FAST_TRIGGER_MODE] = "Fast Trigger Mode",
+
+};
+
+static const char * const imx900_conversion_gain_menu[] = {
+
+	[LOW_CONVERSION_GAIN] = "Low conversion gain",
+	[HIGH_CONVERSION_GAIN] = "High conversion gain",
 
 };
 
@@ -889,6 +901,28 @@ static void imx900_update_frame_rate(struct imx900 *imx900, u64 val)
 				 update_vblank, 1, update_vblank);
 
 	__v4l2_ctrl_s_ctrl(imx900->vblank, update_vblank);
+
+}
+
+static void imx900_adjust_gain_range(struct imx900 *imx900, u8 val)
+{
+	if (val) {
+		__v4l2_ctrl_modify_range(imx900->gain,
+					IMX900_CONVERSION_ANA_GAIN_MIN,
+					IMX900_ANA_GAIN_MAX, 1,
+					IMX900_CONVERSION_ANA_GAIN_DEFAULT);
+
+		__v4l2_ctrl_s_ctrl(imx900->gain, IMX900_CONVERSION_ANA_GAIN_DEFAULT);
+	}
+
+	else {
+		__v4l2_ctrl_modify_range(imx900->gain,
+					IMX900_ANA_GAIN_MIN,
+					IMX900_ANA_GAIN_MAX, 1,
+					IMX900_ANA_GAIN_DEFAULT);
+
+		__v4l2_ctrl_s_ctrl(imx900->gain, IMX900_ANA_GAIN_DEFAULT);
+	}
 
 }
 
@@ -1539,12 +1573,18 @@ static int imx900_set_ctrl(struct v4l2_ctrl *ctrl)
 	case V4L2_CID_VBLANK:
 		imx900_adjust_exposure_range(imx900);
 		break;
+	case V4L2_CID_CONVERSION_GAIN:
+		imx900_adjust_gain_range(imx900, ctrl->val);
+		break;
 	}
 
 	if (pm_runtime_get_if_in_use(&client->dev) == 0)
 		return 0;
 
 	switch (ctrl->id) {
+	case V4L2_CID_CONVERSION_GAIN:
+		ret = imx900_write_hold_reg(imx900, FDG_SEL, 1, ctrl->val);
+		break;
 	case V4L2_CID_ANALOGUE_GAIN:
 		ret = imx900_write_hold_reg(imx900, GAIN_LOW, 2, ctrl->val);
 		break;
@@ -2281,6 +2321,19 @@ static struct v4l2_ctrl_config imx900_ctrl_global_shutter_mode[] = {
 	},
 };
 
+static struct v4l2_ctrl_config imx900_ctrl_conversion_gain[] = {
+	{
+		.ops = &imx900_ctrl_ops,
+		.id = V4L2_CID_CONVERSION_GAIN,
+		.name = "Conversion gain",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = LOW_CONVERSION_GAIN,
+		.def = LOW_CONVERSION_GAIN,
+		.max = HIGH_CONVERSION_GAIN,
+		.qmenu = imx900_conversion_gain_menu,
+	},
+};
+
 static int imx900_init_controls(struct imx900 *imx900)
 {
 	struct v4l2_ctrl_handler *ctrl_hdlr;
@@ -2338,7 +2391,8 @@ static int imx900_init_controls(struct imx900 *imx900)
 					IMX900_BLACK_LEVEL_MIN, 0xFF,
 					IMX900_BLACK_LEVEL_STEP, 0xFF);
 
-	v4l2_ctrl_new_std(ctrl_hdlr, &imx900_ctrl_ops, V4L2_CID_ANALOGUE_GAIN,
+	imx900->gain = v4l2_ctrl_new_std(ctrl_hdlr, &imx900_ctrl_ops,
+					V4L2_CID_ANALOGUE_GAIN,
 					IMX900_ANA_GAIN_MIN,
 					IMX900_ANA_GAIN_MAX,
 					IMX900_ANA_GAIN_STEP,
@@ -2352,6 +2406,9 @@ static int imx900_init_controls(struct imx900 *imx900)
 
 	if (imx900->vflip)
 		imx900->vflip->flags |= V4L2_CTRL_FLAG_MODIFY_LAYOUT;
+
+	imx900->conversion_gain = v4l2_ctrl_new_custom(ctrl_hdlr,
+					imx900_ctrl_conversion_gain, NULL);
 
 	v4l2_ctrl_new_std_menu_items(ctrl_hdlr, &imx900_ctrl_ops,
 					V4L2_CID_TEST_PATTERN,

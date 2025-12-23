@@ -43,9 +43,11 @@
 #define IMX678_MIN_INTEGRATION_LINES		1
 
 #define IMX678_ANA_GAIN_MIN			0
+#define IMX678_CONVERSION_ANA_GAIN_MIN		34
 #define IMX678_ANA_GAIN_MAX			240
 #define IMX678_ANA_GAIN_STEP			1
 #define IMX678_ANA_GAIN_DEFAULT			0
+#define IMX678_CONVERSION_ANA_GAIN_DEFAULT	34
 
 #define IMX678_BLACK_LEVEL_MIN			0
 #define IMX678_BLACK_LEVEL_STEP			1
@@ -73,6 +75,7 @@ enum pad_types {
 #define V4L2_CID_FRAME_RATE		(V4L2_CID_USER_IMX_BASE + 1)
 #define V4L2_CID_OPERATION_MODE		(V4L2_CID_USER_IMX_BASE + 2)
 #define V4L2_CID_SYNC_MODE		(V4L2_CID_USER_IMX_BASE + 3)
+#define V4L2_CID_CONVERSION_GAIN	(V4L2_CID_USER_IMX_BASE + 4)
 
 struct imx678_reg_list {
 	unsigned int num_of_regs;
@@ -288,6 +291,7 @@ struct imx678 {
 	struct v4l2_ctrl *pixel_rate;
 	struct v4l2_ctrl *link_freq;
 	struct v4l2_ctrl *exposure;
+	struct v4l2_ctrl *gain;
 	struct v4l2_ctrl *framerate;
 	struct v4l2_ctrl *operation_mode;
 	struct v4l2_ctrl *sync_mode;
@@ -296,6 +300,7 @@ struct imx678 {
 	struct v4l2_ctrl *vblank;
 	struct v4l2_ctrl *hblank;
 	struct v4l2_ctrl *blklvl;
+	struct v4l2_ctrl *conversion_gain;
 
 	u64 line_time;
 	u32 frame_length;
@@ -364,6 +369,13 @@ static const char * const imx678_sync_mode_menu[] = {
 	[NO_SYNC] = "No Sync",
 	[INTERNAL_SYNC] = "Internal Sync",
 	[EXTERNAL_SYNC] = "External Sync",
+
+};
+
+static const char * const imx678_conversion_gain_menu[] = {
+
+	[LOW_CONVERSION_GAIN] = "Low conversion gain",
+	[HIGH_CONVERSION_GAIN] = "High conversion gain",
 
 };
 
@@ -599,6 +611,28 @@ static void imx678_update_frame_rate(struct imx678 *imx678, u64 val)
 
 }
 
+static void imx678_adjust_gain_range(struct imx678 *imx678, u8 val)
+{
+	if (val) {
+		__v4l2_ctrl_modify_range(imx678->gain,
+					IMX678_CONVERSION_ANA_GAIN_MIN,
+					IMX678_ANA_GAIN_MAX, 1,
+					IMX678_CONVERSION_ANA_GAIN_DEFAULT);
+
+		__v4l2_ctrl_s_ctrl(imx678->gain, IMX678_CONVERSION_ANA_GAIN_DEFAULT);
+	}
+
+	else {
+		__v4l2_ctrl_modify_range(imx678->gain,
+					IMX678_ANA_GAIN_MIN,
+					IMX678_ANA_GAIN_MAX, 1,
+					IMX678_ANA_GAIN_DEFAULT);
+
+		__v4l2_ctrl_s_ctrl(imx678->gain, IMX678_ANA_GAIN_DEFAULT);
+	}
+
+}
+
 static int imx678_set_hmax_register(struct imx678 *imx678)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(&imx678->sd);
@@ -812,12 +846,18 @@ static int imx678_set_ctrl(struct v4l2_ctrl *ctrl)
 	case V4L2_CID_VBLANK:
 		imx678_adjust_exposure_range(imx678);
 		break;
+	case V4L2_CID_CONVERSION_GAIN:
+		imx678_adjust_gain_range(imx678, ctrl->val);
+		break;
 	}
 
 	if (pm_runtime_get_if_in_use(&client->dev) == 0)
 		return 0;
 
 	switch (ctrl->id) {
+	case V4L2_CID_CONVERSION_GAIN:
+		ret = imx678_write_hold_reg(imx678, FDG_SEL0, 1, ctrl->val);
+		break;
 	case V4L2_CID_ANALOGUE_GAIN:
 		ret = imx678_write_hold_reg(imx678, GAIN_LOW, 2, ctrl->val);
 		break;
@@ -1547,6 +1587,19 @@ static struct v4l2_ctrl_config imx678_ctrl_sync_mode[] = {
 	},
 };
 
+static struct v4l2_ctrl_config imx678_ctrl_conversion_gain[] = {
+	{
+		.ops = &imx678_ctrl_ops,
+		.id = V4L2_CID_CONVERSION_GAIN,
+		.name = "Conversion gain",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = LOW_CONVERSION_GAIN,
+		.def = LOW_CONVERSION_GAIN,
+		.max = HIGH_CONVERSION_GAIN,
+		.qmenu = imx678_conversion_gain_menu,
+	},
+};
+
 static int imx678_init_controls(struct imx678 *imx678)
 {
 	struct v4l2_ctrl_handler *ctrl_hdlr;
@@ -1604,7 +1657,8 @@ static int imx678_init_controls(struct imx678 *imx678)
 					IMX678_BLACK_LEVEL_MIN, 0xFF,
 					IMX678_BLACK_LEVEL_STEP, 0xFF);
 
-	v4l2_ctrl_new_std(ctrl_hdlr, &imx678_ctrl_ops, V4L2_CID_ANALOGUE_GAIN,
+	imx678->gain = v4l2_ctrl_new_std(ctrl_hdlr, &imx678_ctrl_ops,
+					V4L2_CID_ANALOGUE_GAIN,
 					IMX678_ANA_GAIN_MIN,
 					IMX678_ANA_GAIN_MAX,
 					IMX678_ANA_GAIN_STEP,
@@ -1615,6 +1669,9 @@ static int imx678_init_controls(struct imx678 *imx678)
 
 	imx678->vflip = v4l2_ctrl_new_std(ctrl_hdlr, &imx678_ctrl_ops,
 					  V4L2_CID_VFLIP, 0, 1, 1, 0);
+
+	imx678->conversion_gain = v4l2_ctrl_new_custom(ctrl_hdlr,
+					imx678_ctrl_conversion_gain, NULL);
 
 	v4l2_ctrl_new_std_menu_items(ctrl_hdlr, &imx678_ctrl_ops,
 					V4L2_CID_TEST_PATTERN,

@@ -27,6 +27,7 @@
 #define HMAX_LOW		0x302C
 #define HMAX_HIGH		0x302D
 
+#define FDG_SEL0		0x3030
 #define PIX_HST_LOW		0x303C
 #define PIX_HST_HIGH		0x303D
 #define PIX_HWIDTH_LOW		0x303E
@@ -310,3 +311,8 @@ enum {
 	INTERNAL_SYNC,
 	EXTERNAL_SYNC,
 } sync_mode;
+
+enum {
+	LOW_CONVERSION_GAIN,
+	HIGH_CONVERSION_GAIN,
+} conversion_gain;

@@ -973,3 +973,8 @@ enum {
 	IMX900_COLOR,
 	IMX900_MONO,
 } chromacity_mode;
+
+enum {
+	LOW_CONVERSION_GAIN,
+	HIGH_CONVERSION_GAIN,
+} conversion_gain;
