@@ -284,6 +284,7 @@ struct imx678 {
 
 	unsigned int fmt_code;
 
+	bool no_reset_gpio;
 	struct gpio_desc *reset_gpio;
 	struct gpio_desc *xmaster;
 
@@ -1436,7 +1437,10 @@ static int imx678_power_on(struct device *dev)
 	struct imx678 *imx678 = to_imx678(sd);
 
 	if (strcmp(imx678->gmsl, "gmsl")) {
-		gpiod_set_value_cansleep(imx678->reset_gpio, 1);
+		if (imx678->reset_gpio)
+			gpiod_set_value_cansleep(imx678->reset_gpio, 1);
+		else
+			dev_info(dev, "no reset GPIO, sensor assumed always on\n");
 		usleep_range(25000, 30000);
 	} else {
 		dev_info(dev, "%s: max96792_power_on\n", __func__);
@@ -1459,7 +1463,8 @@ static int imx678_power_off(struct device *dev)
 
 	mutex_lock(&imx678->mutex);
 	if (strcmp(imx678->gmsl, "gmsl")) {
-		gpiod_set_value_cansleep(imx678->reset_gpio, 0);
+		if (imx678->reset_gpio)
+			gpiod_set_value_cansleep(imx678->reset_gpio, 0);
 	} else {
 		dev_info(dev, "%s: max96792_power_off\n", __func__);
 		max96792_power_off(imx678->dser_dev, &imx678->g_ctx);
@@ -1769,6 +1774,11 @@ static int imx678_check_hwcfg(struct device *dev, struct i2c_client *client)
 		imx678->gmsl = "gmsl";
 	}
 
+	/* Check for no-reset-gpio property 
+	   Compute Module port 1 does not have reset pin
+	*/
+	imx678->no_reset_gpio = of_property_read_bool(node, "no-reset-gpio");
+
 	ret = 0;
 
 error_out:
@@ -1813,7 +1823,7 @@ static int imx678_probe(struct i2c_client *client)
 	if (imx678_check_hwcfg(dev, client))
 		return -EINVAL;
 
-	if (strcmp(imx678->gmsl, "gmsl")) {
+	if (strcmp(imx678->gmsl, "gmsl") && !imx678->no_reset_gpio) {
 		imx678->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 		if (IS_ERR(imx678->reset_gpio)) {
 			dev_err(dev, "cannot get reset gpio\n");

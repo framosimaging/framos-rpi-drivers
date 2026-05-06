@@ -113,6 +113,7 @@ struct max96792 {
 	u8 csi_mode;
 	u8 lane_mp1;
 	u8 lane_mp2;
+	bool no_reset_gpio;
 	int reset_gpio;
 	int pw_ref;
 	struct regulator *vdd_cam_1v2;
@@ -217,7 +218,7 @@ int max96792_power_on(struct device *dev, struct gmsl_link_ctx *g_ctx)
 
 		usleep_range(30, 50);
 
-		if (priv->reset_gpio) {
+		if (priv->reset_gpio > 0) {
 			dev_dbg(dev, "%s: setting reset pin\n", __func__);
 			gpio_set_value_cansleep(priv->reset_gpio, 1);
 			usleep_range(30, 50);
@@ -246,9 +247,8 @@ void max96792_power_off(struct device *dev, struct gmsl_link_ctx *g_ctx)
 
 	if (priv->pw_ref == 0) {
 		usleep_range(1, 2);
-		if (priv->reset_gpio) {
-			if (priv->reset_gpio)
-				gpio_set_value_cansleep(priv->reset_gpio, 0);
+		if (priv->reset_gpio > 0) {
+			gpio_set_value_cansleep(priv->reset_gpio, 0);
 		}
 
 		if (priv->vdd_cam_1v2)
@@ -821,11 +821,18 @@ static int max96792_parse_dt(struct max96792 *priv,
 	}
 	priv->max_src = value;
 
-	priv->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
+	/* Check for no-reset-gpio property (Compute Module port without reset pin) */
+	priv->no_reset_gpio = of_property_read_bool(node, "no-reset-gpio");
 
-	if (priv->reset_gpio < 0) {
-		dev_err(&client->dev, "reset_gpio not found %d\n", err);
-		return err;
+	if (!priv->no_reset_gpio) {
+		priv->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
+		if (priv->reset_gpio < 0) {
+			dev_err(&client->dev, "reset_gpio not found %d\n", err);
+			return err;
+		}
+	} else {
+		priv->reset_gpio = -1;
+		dev_info(&client->dev, "no-reset-gpio set, deserializer reset disabled\n");
 	}
 
 	if (of_get_property(node, "vdd_cam_1v2-supply", NULL)) {

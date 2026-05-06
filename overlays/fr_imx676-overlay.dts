@@ -148,6 +148,21 @@
 		};
 	};
 
+	reset_cam_1_compute_frag: fragment@10 {
+		target = <&cam_node>;
+		__dormant__ {
+			no-reset-gpio;
+		};
+	};
+
+	/* Add no-reset-gpio to deserializer (reuses gmsl_frag, no duplication) */
+	dser_noreset_frag: fragment@11 {
+		target = <&framos_dser_a>;
+		__dormant__ {
+			no-reset-gpio;
+		};
+	};
+
 	__overrides__ {
 		rotation = <&cam_node>,"rotation:0";
 		orientation = <&cam_node>,"orientation:0";
@@ -163,8 +178,14 @@
 				<&i2c_frag>, "target:0=",<&i2c_csi_dsi0>,
 				<&csi_frag>, "target:0=",<&csi0>,
 				<0>, "+2+7";
+
+		/* GMSL Compute Module cam1 (no reset pin) */
+		cam1-gmsl-compute =	<0>, "+8+9+11",
+					<0>, "+3";
 		
 		cam1 =	<0>, "+3+6";
+
+		cam1-compute = <0>, "+3+10";
 		
 		cam0 =	<&i2c_frag>, "target:0=",<&i2c_csi_dsi0>,
 			<&csi_frag>, "target:0=",<&csi0>,
