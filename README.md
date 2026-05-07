@@ -13,7 +13,7 @@ This repository contains driver-source installation instructions for FRAMOS Gene
 #
 ## Supported Raspberry Pi models
 
-- Raspberry Pi 5
+- Raspberry Pi 5, Raspberry Pi 5 Compute Module with RPi 5 IO board
 
 ## Supported Raspberry Pi OS versions and Framos branch compatibility
 
